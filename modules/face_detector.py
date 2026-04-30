@@ -1,22 +1,28 @@
 import cv2
-import os
 
 class FaceDetector:
     def __init__(self):
-        # Utilisation du classificateur Haar Cascade intégré à OpenCV
-        cascade_path = cv2.data.haarcascades + 'haarcascade_frontalface_default.xml'
-        self.detector = cv2.CascadeClassifier(cascade_path)
+        # Chargement des deux modèles : Visage et Yeux
+        self.face_cascade = cv2.CascadeClassifier(cv2.data.haarcascades + 'haarcascade_frontalface_default.xml')
+        self.eye_cascade = cv2.CascadeClassifier(cv2.data.haarcascades + 'haarcascade_eye.xml')
 
     def detect_faces(self, image):
+        """Détecte les visages dans l'image."""
+        if image is None: return []
         gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
-        # Détection des visages
-        faces_rects = self.detector.detectMultiScale(gray, scaleFactor=1.1, minNeighbors=5, minSize=(30, 30))
-        
-        faces = []
-        for (x, y, w, h) in faces_rects:
-            faces.append((x, y, w, h))
-        return faces
+        # On utilise des paramètres stables pour la détection
+        return self.face_cascade.detectMultiScale(gray, 1.3, 5)
+
+    def get_eyes_count(self, face_gray):
+        """Détecte et compte les yeux ouverts dans un visage."""
+        # On cherche les yeux uniquement dans la zone du visage pour plus de précision
+        eyes = self.eye_cascade.detectMultiScale(face_gray, 1.1, 10, minSize=(15, 15))
+        return len(eyes)
 
     def crop_face(self, image, bbox):
+        """Découpe la zone du visage."""
         x, y, w, h = bbox
         return image[y:y+h, x:x+w]
+
+
+
